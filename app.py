@@ -1,4 +1,5 @@
 import argparse
+import streamlit as st
 from langchain_chroma import Chroma
 from langchain.prompts import ChatPromptTemplate
 from langchain_community.llms.ollama import Ollama
@@ -19,12 +20,19 @@ Answer the question based on the above context: {question}
 
 
 def main():
+    
+    st.set_page_config(page_title="Ask your PDF")
+    st.header("Posez moi vos questions")
+    question = st.chat_input("Vos questions...")
+    
+    if question:
+        
     # Create CLI.
-    parser = argparse.ArgumentParser()
-    parser.add_argument("query_text", type=str, help="The query text.")
-    args = parser.parse_args()
-    query_text = args.query_text
-    query_rag(query_text)
+    #parser = argparse.ArgumentParser()
+    #parser.add_argument("query_text", type=str, help="The query text.")
+    #"args = parser.parse_args()
+        query_text = question
+        query_rag(query_text)
 
 
 def query_rag(query_text: str):
@@ -38,17 +46,18 @@ def query_rag(query_text: str):
     context_text = "\n\n---\n\n".join([doc.page_content for doc, _score in results])
     prompt_template = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
     prompt = prompt_template.format(context=context_text, question=query_text)
-    # print(prompt)
+    #st.write(prompt)
 
     model = Ollama(
         base_url='http://localhost:11434',
-        model="mistral"
+        model="mistral-nemo"
         )
     response_text = model.invoke(prompt)
 
     sources = [doc.metadata.get("id", None) for doc, _score in results]
     formatted_response = f"Response: {response_text}\nSources: {sources}"
-    print(formatted_response)
+    st.write(response_text)
+    st.write(sources)
     return response_text
 
 
